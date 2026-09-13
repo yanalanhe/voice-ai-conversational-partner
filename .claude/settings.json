@@ -33,7 +33,8 @@
       "Bash(docker info *)",
       "Bash(tasklist)",
       "Bash(docker build *)",
-      "Bash(docker push *)"
+      "Bash(docker push *)",
+      "Bash(.venv/Scripts/python.exe -m pytest server/ eval/ -q)"
     ],
     "ask": [
       "Bash(git push*)",

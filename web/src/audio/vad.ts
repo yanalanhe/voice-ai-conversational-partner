@@ -19,14 +19,24 @@ export interface VadOptions {
   /** Duration represented by one onLevel() call. Must match the capture
    * worklet's frame size (320 samples @ 16kHz = 20ms). */
   frameMs?: number;
+  /** Hard ceiling on one utterance's length, in ms. Intermittent background
+   * noise can keep re-triggering "loud" frames indefinitely, resetting the
+   * silence hangover before it ever completes -- without this, a noisy room
+   * produces an unbounded recording (observed: 41s, 75s buffers in
+   * production) that real STT then fails to recognize at all, since a
+   * single-utterance recognizer expects one utterance, not a minute of
+   * audio. Forces speech_end regardless of instantaneous level once hit. */
+  maxSpeechMs?: number;
 }
 
 export class EnergyVad {
   private speaking = false;
   private silenceMs = 0;
+  private speechMs = 0;
   private readonly threshold: number;
   private readonly hangoverMs: number;
   private readonly frameMs: number;
+  private readonly maxSpeechMs: number;
 
   constructor(
     private readonly callbacks: VadCallbacks,
@@ -35,6 +45,7 @@ export class EnergyVad {
     this.threshold = opts.threshold ?? 0.02;
     this.hangoverMs = opts.hangoverMs ?? 500;
     this.frameMs = opts.frameMs ?? 20;
+    this.maxSpeechMs = opts.maxSpeechMs ?? 8000;
   }
 
   onLevel(rms: number): void {
@@ -43,16 +54,26 @@ export class EnergyVad {
       this.silenceMs = 0;
       if (!this.speaking) {
         this.speaking = true;
+        this.speechMs = 0;
         this.callbacks.onSpeechStart();
+        return;
       }
-      return;
     }
     if (this.speaking) {
-      this.silenceMs += this.frameMs;
-      if (this.silenceMs >= this.hangoverMs) {
+      this.speechMs += this.frameMs;
+      if (this.speechMs >= this.maxSpeechMs) {
         this.speaking = false;
         this.silenceMs = 0;
         this.callbacks.onSpeechEnd();
+        return;
+      }
+      if (!isLoud) {
+        this.silenceMs += this.frameMs;
+        if (this.silenceMs >= this.hangoverMs) {
+          this.speaking = false;
+          this.silenceMs = 0;
+          this.callbacks.onSpeechEnd();
+        }
       }
     }
   }

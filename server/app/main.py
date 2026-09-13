@@ -48,6 +48,7 @@ from app.session.factory import build_pedagogy_orchestrator
 from app.session.orchestrator import SessionOrchestrator
 from app.state.learner import LearnerStore
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("parlons.gateway")
 
 app = FastAPI(title="Parlons Voice AI Gateway")

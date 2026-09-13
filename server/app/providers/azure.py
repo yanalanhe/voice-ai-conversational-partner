@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 from collections.abc import AsyncIterator, Sequence
 from dataclasses import dataclass, field
 
@@ -30,6 +31,8 @@ from app.providers.types import (
     STTConfig,
     Transcript,
 )
+
+logger = logging.getLogger("parlons.azure")
 
 _DEFAULT_CONFIDENCE = 0.9
 """Used when the recognizer doesn't return a parseable per-word confidence
@@ -67,9 +70,13 @@ class AzureSTT:
             samples_per_second=config.sample_rate, bits_per_sample=16, channels=1
         )
         push_stream = speechsdk.audio.PushAudioInputStream(stream_format=stream_format)
+        total_bytes = 0
         async for chunk in audio:
             push_stream.write(chunk.data)
+            total_bytes += len(chunk.data)
         push_stream.close()
+        duration_ms = total_bytes / (config.sample_rate * 2) * 1000
+        logger.info("azure_stt: received %d bytes (%.0fms) of audio", total_bytes, duration_ms)
 
         speech_config = speechsdk.SpeechConfig(
             subscription=self.subscription_key, region=self.region
@@ -94,6 +101,7 @@ class AzureSTT:
         if result.reason == speechsdk.ResultReason.RecognizedSpeech:
             text = result.text
             confidence = _confidence_from_detailed_json(result.json) or _DEFAULT_CONFIDENCE
+        logger.info("azure_stt: result.reason=%s text=%r", result.reason, text)
 
         yield Transcript(text=text, is_final=True, confidence=confidence, language=config.language)
 
