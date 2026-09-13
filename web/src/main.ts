@@ -87,7 +87,15 @@ async function connect(): Promise<void> {
   );
 
   capture = await startCapture(
-    (pcm) => transport?.sendAudioFrame(pcm),
+    // Gated on the VAD's current classification of *this* frame (capture.ts
+    // calls onLevel before onFrame), not sent unconditionally -- otherwise
+    // every silent moment between utterances gets queued server-side too,
+    // since the server has no independent way to tell speech from silence.
+    // See orchestrator.py's audio queue: it only resets between turns, so
+    // anything sent while not actually speaking pollutes the next utterance.
+    (pcm) => {
+      if (vad.isSpeaking) transport?.sendAudioFrame(pcm);
+    },
     (rms) => vad.onLevel(rms),
   );
 

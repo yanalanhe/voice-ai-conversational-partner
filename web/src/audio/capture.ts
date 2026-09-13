@@ -29,8 +29,12 @@ export async function startCapture(
 
   node.port.onmessage = (event: MessageEvent<ArrayBuffer>) => {
     const pcm = event.data;
-    onFrame(pcm);
+    // onLevel first: it may flip the VAD into "speaking" on this very frame
+    // (firing onSpeechStart), and onFrame's caller gates sending on that
+    // same-frame result -- reversing the order would silently drop the
+    // frame that triggered speech detection.
     onLevel(rmsOf(new Int16Array(pcm)));
+    onFrame(pcm);
   };
 
   // Deliberately not connected to `audioContext.destination` -- capturing the
