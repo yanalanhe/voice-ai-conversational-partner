@@ -1,0 +1,43 @@
+# Informally curated demonstration subset -- see ../README.md.
+# One word per line: the ceiling check compares individual tokens, so a
+# multi-word phrase here would never match (see level_a.txt's history).
+parce
+que
+donc
+mais
+si
+aussi
+déjà
+toujours
+jamais
+souvent
+réunion
+collègue
+bureau
+ordinateur
+téléphone
+courriel
+rendez-vous
+horaire
+projet
+rapport
+décision
+problème
+solution
+important
+urgent
+difficile
+facile
+comprendre
+expliquer
+demander
+répondre
+décider
+organiser
+planifier
+préparer
+terminer
+commencer
+continuer
+changer
+améliorer

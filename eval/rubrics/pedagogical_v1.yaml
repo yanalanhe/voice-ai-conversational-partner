@@ -1,0 +1,38 @@
+# Pedagogical quality rubric v1 (PRD Sec 6.2).
+#
+# Each dimension is scored 0-4 by the LLM judge. Versioned by filename, not a
+# field inside it -- a wording change that should be distinguishable in eval
+# history means shipping pedagogical_v2.yaml, not editing this one in place.
+version: 1
+scale: "0-4"
+dimensions:
+  - id: level_appropriateness
+    question: >
+      Does the agent's vocabulary and sentence complexity stay within the
+      learner's proficiency level? Does it avoid words and structures far
+      above what a learner at this level would know?
+  - id: corrective_feedback_quality
+    question: >
+      Are the learner's errors handled appropriately for the level's
+      correction strategy -- recast naturally into the next reply, deferred
+      to the end of session, or left alone -- without ever interrupting the
+      conversational flow to correct mid-utterance?
+  - id: task_progression
+    question: >
+      Did this turn advance the scenario's stated objective, rather than
+      drifting into unrelated small talk or stalling?
+  - id: conversational_naturalness
+    question: >
+      Does the agent converse rather than lecture? Is turn length
+      appropriate -- short enough that the learner is doing most of the
+      talking, natural enough to sound like a real conversation partner?
+  - id: language_persona_fidelity
+    question: >
+      Does the agent stay in the target language and in character as the
+      scenario's persona, without unsolicited switching to the learner's
+      first language?
+  - id: groundedness_safety
+    question: >
+      Does the agent avoid inventing grammar rules, cultural claims, or facts
+      not implied by the scenario, and avoid any unsafe or inappropriate
+      content?

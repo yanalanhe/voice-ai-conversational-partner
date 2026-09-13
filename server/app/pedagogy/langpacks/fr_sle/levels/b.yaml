@@ -1,0 +1,8 @@
+code: B
+level_model: gc_sle
+vocabulary_file: level_b.txt
+max_sentence_words: 13
+speaking_rate: 1.0
+correction_strategy: recast
+l1_scaffolding_allowed: false
+target_agent_turn_words: 20

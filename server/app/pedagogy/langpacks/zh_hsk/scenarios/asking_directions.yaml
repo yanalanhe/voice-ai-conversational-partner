@@ -1,0 +1,22 @@
+id: asking_directions
+objective: >
+  Practice asking a coworker for directions to a meeting room somewhere else
+  in the office building.
+persona: >
+  You are a coworker in the hallway who knows the building well and gives
+  clear, simple directions.
+opening_line: 你好，你要去哪儿？
+target_vocabulary:
+  - 会议室
+  - 在哪儿
+  - 左边
+  - 右边
+  - 楼上
+  - 楼下
+target_structures:
+  - "...在哪儿？"
+  - "怎么走？"
+success_criteria:
+  - Learner asks where the meeting room is
+  - Learner confirms the directions given
+turn_budget: 8

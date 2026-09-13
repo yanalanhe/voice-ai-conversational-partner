@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Parlons -- Voice AI Pipeline Demo</title>
+    <style>
+      :root { color-scheme: light dark; }
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        max-width: 640px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+      }
+      h1 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.25rem; }
+      .subtitle { color: #888; font-size: 0.85rem; margin-bottom: 1.5rem; }
+      button {
+        font-size: 1rem;
+        padding: 0.5rem 1.25rem;
+        margin-bottom: 1rem;
+        cursor: pointer;
+      }
+      .status { font-size: 0.85rem; color: #666; margin-bottom: 0.75rem; }
+      .transcript {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 0.75rem;
+        height: 240px;
+        overflow-y: auto;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+      }
+      .line { padding: 0.15rem 0; }
+      .line.interrupted { color: #c00; font-style: italic; }
+      .latency { font-size: 0.85rem; }
+      .ttfa { font-weight: 600; margin-bottom: 0.25rem; }
+      .stages {
+        background: #f5f5f5;
+        border-radius: 4px;
+        padding: 0.5rem;
+        font-size: 0.8rem;
+        white-space: pre-wrap;
+      }
+      @media (prefers-color-scheme: dark) {
+        .transcript { border-color: #444; }
+        .stages { background: #222; }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Parlons</h1>
+    <div class="subtitle">Voice AI conversation partner -- cascaded pipeline demo</div>
+    <button id="connect">Connect</button>
+    <div id="hud"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

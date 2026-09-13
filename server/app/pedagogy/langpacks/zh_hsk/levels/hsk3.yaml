@@ -1,0 +1,8 @@
+code: HSK3
+level_model: hsk
+vocabulary_file: hsk3.txt
+max_sentence_words: 14
+speaking_rate: 1.0
+correction_strategy: recast
+l1_scaffolding_allowed: false
+target_agent_turn_words: 18

@@ -1,0 +1,29 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      # "zh_hsk" (default): the real pedagogy demo -- HSK1-calibrated
+      # Mandarin, a real vocabulary-ceiling check on every reply.
+      # "generic": a plain English scripted stub with no pedagogy, for
+      # sanity-checking pipeline mechanics without reading Mandarin.
+      # Override: DEMO_SCRIPT=generic docker compose up --build
+      - DEMO_SCRIPT=${DEMO_SCRIPT:-zh_hsk}
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        # The browser runs on the host machine, not inside the compose
+        # network, so it must reach the backend via the host-mapped port
+        # above -- "backend:8000" (the compose service DNS name) would only
+        # resolve from inside another container.
+        VITE_WS_URL: ws://localhost:8000/ws/session
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend

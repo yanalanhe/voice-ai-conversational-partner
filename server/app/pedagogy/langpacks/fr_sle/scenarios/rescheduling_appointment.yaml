@@ -1,0 +1,19 @@
+id: rescheduling_appointment
+objective: >
+  Practice calling to reschedule an appointment to a different day or time.
+persona: >
+  You are a receptionist helping the learner change an appointment time.
+opening_line: Bonjour, comment puis-je vous aider?
+target_vocabulary:
+  - rendez-vous
+  - demain
+  - heure
+  - possible
+  - changer
+target_structures:
+  - "Je voudrais changer..."
+  - "Est-ce que c'est possible?"
+success_criteria:
+  - Learner proposes a new time
+  - Learner confirms the new appointment
+turn_budget: 10

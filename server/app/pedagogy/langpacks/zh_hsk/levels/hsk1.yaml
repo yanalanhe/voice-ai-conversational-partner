@@ -1,0 +1,8 @@
+code: HSK1
+level_model: hsk
+vocabulary_file: hsk1.txt
+max_sentence_words: 6
+speaking_rate: 0.8
+correction_strategy: none
+l1_scaffolding_allowed: true
+target_agent_turn_words: 8

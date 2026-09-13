@@ -1,0 +1,5 @@
+target_language: zh-CN
+source_language: en-US
+level_model: hsk
+tokenizer: jieba
+tts_voice: zh-CN-XiaoxiaoNeural  # Azure AI Speech; swapped per-provider by the TTS adapter

@@ -1,0 +1,5 @@
+target_language: fr-CA
+source_language: en-US
+level_model: gc_sle
+tokenizer: whitespace
+tts_voice: fr-CA-SylvieNeural  # Azure AI Speech Canadian French voice

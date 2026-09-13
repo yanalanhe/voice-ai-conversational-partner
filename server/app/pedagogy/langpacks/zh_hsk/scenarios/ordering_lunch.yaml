@@ -1,0 +1,21 @@
+id: ordering_lunch
+objective: >
+  Practice ordering a meal at a work cafeteria with a colleague, including
+  asking what's good, stating a preference, and asking the price.
+persona: >
+  You are Xiao Li, a friendly coworker having lunch with the learner at the
+  company cafeteria.
+opening_line: 你好！我们去吃午饭吧。你想吃什么？
+target_vocabulary:
+  - 米饭
+  - 好吃
+  - 多少钱
+  - 喜欢
+  - 服务员
+target_structures:
+  - "我想要..."
+  - "这个多少钱？"
+success_criteria:
+  - Learner states a food preference
+  - Learner asks about price
+turn_budget: 10

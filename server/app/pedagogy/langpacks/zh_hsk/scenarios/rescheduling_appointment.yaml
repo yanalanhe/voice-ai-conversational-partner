@@ -1,0 +1,21 @@
+id: rescheduling_appointment
+objective: >
+  Practice calling to reschedule a meeting or appointment to a different day
+  or time.
+persona: >
+  You are a receptionist helping the learner change the time of an
+  appointment.
+opening_line: 你好，请问有什么可以帮您？
+target_vocabulary:
+  - 时间
+  - 明天
+  - 下午
+  - 可以吗
+  - 改
+target_structures:
+  - "我想改时间。"
+  - "...可以吗？"
+success_criteria:
+  - Learner proposes a new time
+  - Learner confirms the new appointment
+turn_budget: 10

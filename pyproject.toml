@@ -1,0 +1,79 @@
+[project]
+name = "parlons"
+version = "0.1.0"
+description = "Voice-first AI conversation partner for second-language speaking practice"
+# 3.10 floor is set by the local dev machine. Deploy image runs 3.12.
+# Practical consequence: no asyncio.TaskGroup -- the pipeline uses explicit
+# task handles and cancellation, which barge-in needs to be precise about anyway.
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "pydantic>=2.9",
+    "pyyaml>=6.0",
+    "websockets>=13.0",
+]
+
+[project.optional-dependencies]
+azure = ["azure-cognitiveservices-speech>=1.41"]
+gemini = ["google-genai>=0.3"]
+openai = ["openai>=1.54"]
+zh = ["jieba>=0.42"]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=6.0",
+    "ruff>=0.8",
+    "mypy>=1.13",
+    "httpx",  # required by starlette.testclient for the gateway WebSocket tests
+    "types-PyYAML",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["server"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["server/tests", "eval"]
+pythonpath = ["server"]
+addopts = "-q --strict-markers"
+markers = [
+    "live: hits real provider APIs; requires credentials and costs money",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC", "RUF"]
+# RUF001/002/003 flag full-width CJK punctuation as "ambiguous" -- this is a
+# bilingual EN/ZH codebase (primary language pack is Mandarin), so 。！？ are
+# correct content, not typos for their half-width lookalikes.
+ignore = ["RUF001", "RUF002", "RUF003"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+mypy_path = "server"
+warn_unreachable = true
+disallow_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = ["jieba.*", "azure.*", "google.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# Pytest's parametrize passes fixture factories with no static type (the
+# `factory` param in the conformance suite): the function has a `-> None`
+# return annotation but an untyped `factory` param, which is an *incomplete*
+# annotation (disallow_incomplete_defs), not a fully untyped one
+# (disallow_untyped_defs) -- both need to be off here. Production code stays
+# strict.
+module = "tests.*"
+disallow_untyped_defs = false
+disallow_incomplete_defs = false

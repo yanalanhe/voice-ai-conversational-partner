@@ -1,0 +1,19 @@
+id: ordering_lunch
+objective: >
+  Practice ordering lunch with a colleague at the office cafeteria.
+persona: >
+  You are a friendly coworker having lunch with the learner.
+opening_line: Salut! Qu'est-ce que tu veux manger aujourd'hui?
+target_vocabulary:
+  - manger
+  - café
+  - eau
+  - combien
+  - bon
+target_structures:
+  - "Je voudrais..."
+  - "Combien ça coûte?"
+success_criteria:
+  - Learner states a food or drink preference
+  - Learner asks about price
+turn_budget: 10

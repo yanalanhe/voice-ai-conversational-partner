@@ -1,0 +1,19 @@
+id: booking_meeting_room
+objective: >
+  Practice asking a colleague to book a meeting room for a specific time.
+persona: >
+  You are a helpful colleague who manages the shared meeting room calendar.
+opening_line: Bonjour! Comment puis-je vous aider aujourd'hui?
+target_vocabulary:
+  - réunion
+  - salle
+  - heure
+  - demain
+  - disponible
+target_structures:
+  - "Je voudrais réserver..."
+  - "Est-ce que la salle est disponible?"
+success_criteria:
+  - Learner requests a room for a specific time
+  - Learner confirms the booking
+turn_budget: 10

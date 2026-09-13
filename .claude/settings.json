@@ -1,0 +1,45 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python *)",
+      "Bash(python3 *)",
+      "Bash(.venv/Scripts/python.exe *)",
+      "Bash(./.venv/Scripts/python.exe *)",
+      "Bash(.venv/bin/python *)",
+      "Bash(pytest *)",
+      "Bash(python -m pytest*)",
+      "Bash(ruff *)",
+      "Bash(python -m ruff*)",
+      "Bash(mypy *)",
+      "Bash(python -m mypy*)",
+      "Bash(pip install*)",
+      "Bash(python -m pip install*)",
+      "Bash(node *)",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(vite *)",
+      "PowerShell(python *)",
+      "PowerShell(python3 *)",
+      "PowerShell(.\\.venv\\Scripts\\python.exe *)",
+      "PowerShell(& .\\.venv\\Scripts\\python.exe *)",
+      "PowerShell(pytest *)",
+      "PowerShell(ruff *)",
+      "PowerShell(mypy *)",
+      "PowerShell(pip install*)",
+      "PowerShell(node *)",
+      "PowerShell(npm *)",
+      "PowerShell(npx *)",
+      "PowerShell(vite *)"
+    ],
+    "ask": [
+      "Bash(git push*)",
+      "Bash(git reset --hard*)",
+      "Bash(rm *)",
+      "Bash(rm -rf*)",
+      "PowerShell(git push*)",
+      "PowerShell(git reset --hard*)",
+      "PowerShell(Remove-Item*)",
+      "PowerShell(rm *)"
+    ]
+  }
+}

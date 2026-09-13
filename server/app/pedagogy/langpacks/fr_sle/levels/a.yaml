@@ -1,0 +1,8 @@
+code: A
+level_model: gc_sle
+vocabulary_file: level_a.txt
+max_sentence_words: 7
+speaking_rate: 0.8
+correction_strategy: none
+l1_scaffolding_allowed: true
+target_agent_turn_words: 10
