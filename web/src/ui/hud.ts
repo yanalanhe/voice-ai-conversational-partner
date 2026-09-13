@@ -52,6 +52,14 @@ export class Hud {
     this.transcriptEl.appendChild(line);
   }
 
+  markNoSpeech(): void {
+    const line = document.createElement("div");
+    line.className = "line no-speech";
+    line.textContent = "-- didn't catch that, try again --";
+    this.transcriptEl.appendChild(line);
+    this.transcriptEl.scrollTop = this.transcriptEl.scrollHeight;
+  }
+
   setLatency(summary: TurnSummary): void {
     const ttfa = summary.ttfa_ms === null ? "--" : `${summary.ttfa_ms.toFixed(0)} ms`;
     this.ttfaEl.textContent = `TTFA: ${ttfa}${summary.barged_in ? " (interrupted)" : ""}`;

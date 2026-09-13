@@ -41,4 +41,15 @@ class TurnInterruptedEvent:
     summary: dict[str, object]
 
 
-OrchestratorEvent = TranscriptEvent | AssistantAudioEvent | TurnCompleteEvent | TurnInterruptedEvent
+@dataclass(frozen=True, slots=True)
+class NoSpeechEvent:
+    """STT returned an empty final transcript -- nothing recognizable in the
+    utterance. Distinct from simply not emitting anything: a real STT
+    provider can legitimately hear silence, noise, or unclear audio, and the
+    learner deserves to know their turn wasn't dropped silently (mocks never
+    trigger this in practice, since scripted utterances are never empty)."""
+
+
+OrchestratorEvent = (
+    TranscriptEvent | AssistantAudioEvent | TurnCompleteEvent | TurnInterruptedEvent | NoSpeechEvent
+)

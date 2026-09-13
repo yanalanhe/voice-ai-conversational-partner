@@ -35,12 +35,36 @@ param demoAccessCode string = ''
 @description('Max turns allowed across ALL sessions per UTC day -- see DailySpendCeiling in demo_guard.py.')
 param dailyTurnCeiling int = 500
 
+@description('Max turns allowed within one session -- see TurnCapEnforcer in demo_guard.py.')
+param turnsPerSession int = 20
+
+@description('Which demo script main.py serves: "zh_hsk" (pedagogy-backed Mandarin demo, default) or "generic" (plain English, optionally backed by real providers -- see the azure* params).')
+param demoScript string = 'zh_hsk'
+
+@description('Azure AI Speech key. Only used by DEMO_SCRIPT=generic; all five real-provider params must be set together or main.py falls back to mocks -- see app/main.py _USE_REAL_GENERIC_PROVIDERS.')
+@secure()
+param azureSpeechKey string = ''
+
+@description('Azure AI Speech region, e.g. canadacentral.')
+param azureSpeechRegion string = ''
+
+@description('Azure OpenAI resource endpoint, e.g. https://<resource>.openai.azure.com/.')
+param azureOpenAiEndpoint string = ''
+
+@secure()
+@description('Azure OpenAI API key.')
+param azureOpenAiApiKey string = ''
+
+@description('Azure OpenAI chat deployment name (not the base model name).')
+param azureOpenAiDeployment string = ''
+
 var logAnalyticsName = '${namePrefix}-logs'
 var envName = '${namePrefix}-env'
 var appName = '${namePrefix}-backend'
 
 var hasRegistry = !empty(registryServer)
 var hasAccessCode = !empty(demoAccessCode)
+var hasRealProviders = !empty(azureSpeechKey) && !empty(azureOpenAiApiKey)
 
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
   name: logAnalyticsName
@@ -97,6 +121,18 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
                 value: demoAccessCode
               }
             ]
+          : [],
+        hasRealProviders
+          ? [
+              {
+                name: 'azure-speech-key'
+                value: azureSpeechKey
+              }
+              {
+                name: 'azure-openai-api-key'
+                value: azureOpenAiApiKey
+              }
+            ]
           : []
       )
       registries: hasRegistry
@@ -127,10 +163,42 @@ resource containerApp 'Microsoft.App/containerApps@2023-05-01' = {
                   }
                 ]
               : [],
+            hasRealProviders
+              ? [
+                  {
+                    name: 'AZURE_SPEECH_KEY'
+                    secretRef: 'azure-speech-key'
+                  }
+                  {
+                    name: 'AZURE_SPEECH_REGION'
+                    value: azureSpeechRegion
+                  }
+                  {
+                    name: 'AZURE_OPENAI_ENDPOINT'
+                    value: azureOpenAiEndpoint
+                  }
+                  {
+                    name: 'AZURE_OPENAI_API_KEY'
+                    secretRef: 'azure-openai-api-key'
+                  }
+                  {
+                    name: 'AZURE_OPENAI_DEPLOYMENT'
+                    value: azureOpenAiDeployment
+                  }
+                ]
+              : [],
             [
               {
                 name: 'DEMO_DAILY_TURN_CEILING'
                 value: string(dailyTurnCeiling)
+              }
+              {
+                name: 'DEMO_TURNS_PER_SESSION'
+                value: string(turnsPerSession)
+              }
+              {
+                name: 'DEMO_SCRIPT'
+                value: demoScript
               }
             ]
           )

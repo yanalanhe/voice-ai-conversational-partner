@@ -4,6 +4,7 @@ from app.providers.mock import LatencyProfile, MockLLM, MockSTT, MockTTS, script
 from app.providers.types import AudioChunk, Role
 from app.session.events import (
     AssistantAudioEvent,
+    NoSpeechEvent,
     OrchestratorEvent,
     TranscriptEvent,
     TurnCompleteEvent,
@@ -76,6 +77,10 @@ class TestHappyPath:
         assert "Hello!" in history[-1].content
 
     async def test_silence_produces_no_turn(self) -> None:
+        """No turn happens, but the learner still gets told nothing was
+        heard -- a real STT provider can genuinely hear silence or unclear
+        audio, and dropping that outcome with zero feedback is
+        indistinguishable from the app being broken (see NoSpeechEvent)."""
         outbox: asyncio.Queue[OrchestratorEvent] = asyncio.Queue()
         orch = SessionOrchestrator(
             stt=_fast_stt([""]),  # STT heard nothing
@@ -87,7 +92,7 @@ class TestHappyPath:
         await asyncio.sleep(0.02)
 
         events = await _drain(outbox)
-        assert events == []
+        assert events == [NoSpeechEvent()]
         assert orch.history == []
         assert orch.state == "listening"
 

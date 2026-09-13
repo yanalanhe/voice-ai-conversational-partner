@@ -13,4 +13,5 @@ export type ServerEvent =
   | { type: "transcript"; text: string }
   | { type: "assistant_audio"; text: string; seq: number; audio: ArrayBuffer }
   | { type: "turn_complete"; summary: TurnSummary }
-  | { type: "turn_interrupted"; summary: TurnSummary };
+  | { type: "turn_interrupted"; summary: TurnSummary }
+  | { type: "no_speech" };

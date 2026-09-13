@@ -10,7 +10,7 @@ WORKDIR /build
 COPY pyproject.toml ./
 COPY server ./server
 
-RUN pip install --no-cache-dir ".[zh]"
+RUN pip install --no-cache-dir ".[zh,azure,openai]"
 
 EXPOSE 8000
 

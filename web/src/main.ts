@@ -73,6 +73,9 @@ async function connect(): Promise<void> {
           hud.setLatency(event.summary);
           hud.markInterrupted();
           break;
+        case "no_speech":
+          hud.markNoSpeech();
+          break;
       }
     },
     () => hud.setStatus("connected -- speak whenever you're ready"),

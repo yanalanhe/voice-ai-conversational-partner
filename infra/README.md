@@ -48,6 +48,21 @@ that was discovered while planning deployment, not an arbitrary choice.
        dailyTurnCeiling=500
    ```
 
+   To run `DEMO_SCRIPT=generic` against real Azure AI Speech + Azure OpenAI instead of
+   mocks (see `server/app/providers/azure.py`), add:
+
+   ```
+       demoScript=generic \
+       azureSpeechKey=<speech-resource-key> \
+       azureSpeechRegion=<speech-resource-region> \
+       azureOpenAiEndpoint=https://<openai-resource>.openai.azure.com/ \
+       azureOpenAiApiKey=<openai-resource-key> \
+       azureOpenAiDeployment=<chat-deployment-name>
+   ```
+
+   All five must be set together, or `main.py` falls back to the fully-mocked generic
+   script. TTS stays mocked either way — only STT and the LLM become real.
+
 4. **Get the backend URL** from the deployment output (`backendUrl`), and use
    it as `VITE_WS_URL` when building the frontend (see the repo root
    README's deployment section) — note the scheme flips from `https://` to

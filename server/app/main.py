@@ -7,10 +7,12 @@ method calls. All turn-taking, barge-in, and pipeline logic lives in the
 orchestrator; there is deliberately little to test here beyond "does the wire
 format round-trip" (see test_gateway.py).
 
-Providers are mocks (ADR-003) until real adapters land -- swapping in Azure
-Speech / Azure OpenAI later is a one-line change in `_default_orchestrator`,
-not a change to the orchestrator or this gateway. The pedagogy wiring around
-those mocks (pack, level, scenario, prompt) is real, via
+The zh_hsk pedagogy demo always runs on mocks (ADR-003) -- its vocabulary
+ceiling and scenario guarantees were built and verified against scripted
+output, not a real model. The "generic" demo script optionally runs on real
+Azure AI Speech + Azure OpenAI instead (see `_default_orchestrator` and
+`app.providers.azure`) when credentials are configured. The pedagogy wiring
+around the zh_hsk mocks (pack, level, scenario, prompt) is real, via
 `app.session.factory.build_pedagogy_orchestrator` -- not a stub.
 """
 
@@ -25,6 +27,7 @@ import uuid
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
 from app.pedagogy.packs import load_builtin_pack
+from app.providers.azure import AzureLLM, AzureSTT
 from app.providers.mock import MockLLM, MockSTT, MockTTS, scripted_tutor
 from app.providers.types import AudioChunk
 from app.security.demo_guard import (
@@ -35,6 +38,7 @@ from app.security.demo_guard import (
 )
 from app.session.events import (
     AssistantAudioEvent,
+    NoSpeechEvent,
     OrchestratorEvent,
     TranscriptEvent,
     TurnCompleteEvent,
@@ -72,6 +76,25 @@ _MAX_TURNS_PER_SESSION = int(os.environ.get("DEMO_TURNS_PER_SESSION", "20"))
 # all, just a fixed script.
 _DEMO_SCRIPT = os.environ.get("DEMO_SCRIPT", "zh_hsk")
 
+# Real providers (Azure AI Speech + Azure OpenAI), used only by the "generic"
+# demo script -- the zh_hsk pack's pedagogy guarantees (vocabulary ceiling,
+# scenario adherence) were built and verified against scripted mock output,
+# not a real model, so swapping it to a real LLM is out of scope here. All
+# four must be set, or this falls back to the fully-mocked generic script
+# (see _default_orchestrator) -- there is no partial-real mode.
+_AZURE_SPEECH_KEY = os.environ.get("AZURE_SPEECH_KEY")
+_AZURE_SPEECH_REGION = os.environ.get("AZURE_SPEECH_REGION")
+_AZURE_OPENAI_ENDPOINT = os.environ.get("AZURE_OPENAI_ENDPOINT")
+_AZURE_OPENAI_API_KEY = os.environ.get("AZURE_OPENAI_API_KEY")
+_AZURE_OPENAI_DEPLOYMENT = os.environ.get("AZURE_OPENAI_DEPLOYMENT")
+_USE_REAL_GENERIC_PROVIDERS = bool(
+    _AZURE_SPEECH_KEY
+    and _AZURE_SPEECH_REGION
+    and _AZURE_OPENAI_ENDPOINT
+    and _AZURE_OPENAI_API_KEY
+    and _AZURE_OPENAI_DEPLOYMENT
+)
+
 # Loaded once at import time -- pack loading reads and parses YAML + wordlist
 # files (app/pedagogy/packs.py), no reason to redo that per connection.
 _DEMO_PACK = load_builtin_pack("zh_hsk")
@@ -105,10 +128,28 @@ def _default_orchestrator(outbox: asyncio.Queue[OrchestratorEvent]) -> SessionOr
     Each connection gets a fresh, unpersisted LearnerProfile -- there is no
     reason for one public-demo visitor's session to share state with another.
 
-    Set DEMO_SCRIPT=generic for a plain English scripted conversation instead
-    -- no pedagogy layer involved at all, just MockSTT/MockLLM directly.
+    Set DEMO_SCRIPT=generic for a plain English conversation instead -- no
+    pedagogy layer involved at all. If AZURE_SPEECH_KEY/REGION and
+    AZURE_OPENAI_ENDPOINT/API_KEY/DEPLOYMENT are all set, this uses real
+    Azure AI Speech (STT) and real Azure OpenAI (LLM) -- what you say is
+    actually recognized and actually answered, not replayed from a script.
+    TTS stays mocked either way (silence audio) to keep scope bounded; agent
+    replies are real text either way, they just don't get spoken back.
     """
     if _DEMO_SCRIPT == "generic":
+        if _USE_REAL_GENERIC_PROVIDERS:
+            assert _AZURE_SPEECH_KEY and _AZURE_SPEECH_REGION  # narrows for mypy
+            assert _AZURE_OPENAI_ENDPOINT and _AZURE_OPENAI_API_KEY and _AZURE_OPENAI_DEPLOYMENT
+            return SessionOrchestrator(
+                stt=AzureSTT(subscription_key=_AZURE_SPEECH_KEY, region=_AZURE_SPEECH_REGION),
+                llm=AzureLLM(
+                    endpoint=_AZURE_OPENAI_ENDPOINT,
+                    api_key=_AZURE_OPENAI_API_KEY,
+                    deployment=_AZURE_OPENAI_DEPLOYMENT,
+                ),
+                tts=MockTTS(),
+                outbox=outbox,
+            )
         return SessionOrchestrator(
             stt=MockSTT(utterances=["hello", "how are you", "goodbye"], loop=True),
             llm=MockLLM(
@@ -147,6 +188,8 @@ def _event_to_json(event: OrchestratorEvent) -> dict[str, object]:
         return {"type": "turn_complete", "summary": event.summary}
     if isinstance(event, TurnInterruptedEvent):
         return {"type": "turn_interrupted", "summary": event.summary}
+    if isinstance(event, NoSpeechEvent):
+        return {"type": "no_speech"}
     raise TypeError(f"no JSON mapping for {type(event)!r}")
 
 

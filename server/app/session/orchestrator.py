@@ -37,6 +37,7 @@ from app.providers.types import (
 )
 from app.session.events import (
     AssistantAudioEvent,
+    NoSpeechEvent,
     OrchestratorEvent,
     TranscriptEvent,
     TurnCompleteEvent,
@@ -173,6 +174,7 @@ class SessionOrchestrator:
                 final_text = transcript.text
 
         if not final_text.strip():
+            await self.outbox.put(NoSpeechEvent())
             self._open_new_audio_queue()
             return
 
