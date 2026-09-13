@@ -29,7 +29,11 @@
       "PowerShell(node *)",
       "PowerShell(npm *)",
       "PowerShell(npx *)",
-      "PowerShell(vite *)"
+      "PowerShell(vite *)",
+      "Bash(docker info *)",
+      "Bash(tasklist)",
+      "Bash(docker build *)",
+      "Bash(docker push *)"
     ],
     "ask": [
       "Bash(git push*)",

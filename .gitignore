@@ -22,3 +22,5 @@ eval/reports/*
 
 .claude/settings.local.json
 .design
+
+infra/main.json
