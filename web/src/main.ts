@@ -27,9 +27,17 @@ function wsUrl(): string {
   // to reach a WebSocket server on the frontend's own port instead of the
   // backend's. Falls back to same-origin for local `npm run dev`.
   const configured = import.meta.env.VITE_WS_URL;
-  if (configured) return configured;
-  const proto = location.protocol === "https:" ? "wss:" : "ws:";
-  return `${proto}//${location.host}/ws/session`;
+  const base = configured ?? `${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}/ws/session`;
+
+  // AccessCodeGuard on the backend (server/app/main.py) reads this from the
+  // `code` query param and closes the connection before accept() if it's
+  // missing or wrong -- required whenever DEMO_ACCESS_CODE is set server-side,
+  // i.e. any public deployment. Unset locally, where the guard is disabled.
+  const code = import.meta.env.VITE_DEMO_ACCESS_CODE;
+  if (!code) return base;
+  const url = new URL(base);
+  url.searchParams.set("code", code);
+  return url.toString();
 }
 
 async function connect(): Promise<void> {

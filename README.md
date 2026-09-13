@@ -134,7 +134,10 @@ required (ADR-003).
 
 **Frontend → Vercel.** Import this repo, set the project root to `web/`, and set the
 `VITE_WS_URL` environment variable to the deployed backend's `wss://` URL (Vite inlines it at
-build time — see `web/src/main.ts`'s `wsUrl()`).
+build time — see `web/src/main.ts`'s `wsUrl()`). If the backend has `DEMO_ACCESS_CODE` set
+(see below), also set `VITE_DEMO_ACCESS_CODE` to the same value — otherwise every connection
+from the deployed frontend is rejected before `accept()` with no visible error beyond the
+browser console.
 
 **Backend → Azure Container Apps**, not Vercel — Vercel's serverless/edge runtimes do not
 support the persistent WebSocket connection the backend needs. This was a real constraint
