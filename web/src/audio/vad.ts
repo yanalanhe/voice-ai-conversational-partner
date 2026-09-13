@@ -43,7 +43,13 @@ export class EnergyVad {
     opts: VadOptions = {},
   ) {
     this.threshold = opts.threshold ?? 0.02;
-    this.hangoverMs = opts.hangoverMs ?? 500;
+    // 500ms (the PRD VP-3 default) reads natural mid-sentence thinking-pauses
+    // as end-of-utterance for real spontaneous speech, fragmenting turns and
+    // triggering spurious barge-in on the agent's own in-flight reply
+    // (observed in production once real STT/LLM replaced the mocks, which
+    // never paused). 900ms trades a bit of endpointing latency for fewer
+    // false completions.
+    this.hangoverMs = opts.hangoverMs ?? 900;
     this.frameMs = opts.frameMs ?? 20;
     this.maxSpeechMs = opts.maxSpeechMs ?? 8000;
   }
