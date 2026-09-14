@@ -27,7 +27,7 @@ import uuid
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
 from app.pedagogy.packs import load_builtin_pack
-from app.providers.azure import AzureLLM, AzureSTT
+from app.providers.azure import AzureLLM, AzureSTT, AzureTTS
 from app.providers.mock import MockLLM, MockSTT, MockTTS, scripted_tutor
 from app.providers.types import AudioChunk
 from app.security.demo_guard import (
@@ -132,10 +132,10 @@ def _default_orchestrator(outbox: asyncio.Queue[OrchestratorEvent]) -> SessionOr
     Set DEMO_SCRIPT=generic for a plain English conversation instead -- no
     pedagogy layer involved at all. If AZURE_SPEECH_KEY/REGION and
     AZURE_OPENAI_ENDPOINT/API_KEY/DEPLOYMENT are all set, this uses real
-    Azure AI Speech (STT) and real Azure OpenAI (LLM) -- what you say is
-    actually recognized and actually answered, not replayed from a script.
-    TTS stays mocked either way (silence audio) to keep scope bounded; agent
-    replies are real text either way, they just don't get spoken back.
+    Azure AI Speech (STT and TTS) and real Azure OpenAI (LLM) -- what you
+    say is actually recognized, actually answered, and the reply is actually
+    spoken back, not replayed from a script. TTS reuses the same Speech
+    resource/credentials as STT -- no separate configuration needed.
     """
     if _DEMO_SCRIPT == "generic":
         if _USE_REAL_GENERIC_PROVIDERS:
@@ -148,7 +148,7 @@ def _default_orchestrator(outbox: asyncio.Queue[OrchestratorEvent]) -> SessionOr
                     api_key=_AZURE_OPENAI_API_KEY,
                     deployment=_AZURE_OPENAI_DEPLOYMENT,
                 ),
-                tts=MockTTS(),
+                tts=AzureTTS(subscription_key=_AZURE_SPEECH_KEY, region=_AZURE_SPEECH_REGION),
                 outbox=outbox,
             )
         return SessionOrchestrator(

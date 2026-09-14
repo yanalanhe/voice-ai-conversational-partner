@@ -29,7 +29,9 @@ from app.providers.types import (
     LLMDelta,
     Message,
     STTConfig,
+    SynthesisChunk,
     Transcript,
+    TTSConfig,
 )
 
 logger = logging.getLogger("parlons.azure")
@@ -180,3 +182,66 @@ class AzureLLM:
         if self._client is not None:
             await self._client.close()
             self._client = None
+
+
+@dataclass
+class AzureTTS:
+    """Streaming speech synthesis via Azure AI Speech.
+
+    Synthesizes one clause at a time as the pipeline produces them -- each
+    clause is its own `speak_text_async` call, so the first clause's audio
+    can reach the client while the LLM is still generating later clauses.
+    This is the same latency shape as MockTTS and the exact reason
+    `TTSProvider.synthesize` takes an `AsyncIterator[str]` rather than a
+    `str` (see protocols.py) -- a per-call synthesizer, not a persistent
+    connection, since Azure's synthesis API is request/response per utterance
+    rather than a duplex stream.
+
+    `config.speaking_rate` is not yet honored -- doing so correctly needs
+    SSML with a `<prosody rate>` tag instead of plain-text synthesis. Left
+    as a known gap (see docs/ARCHITECTURE.md's honesty notes) rather than
+    building fragile SSML string interpolation for a first pass.
+    """
+
+    subscription_key: str
+    region: str
+    default_voice: str = "en-US-JennyNeural"
+    name: str = "azure-speech-tts"
+
+    async def synthesize(
+        self,
+        text: AsyncIterator[str],
+        config: TTSConfig,
+    ) -> AsyncIterator[SynthesisChunk]:
+        voice = (
+            config.voice if config.voice and config.voice != "mock-voice" else self.default_voice
+        )
+        speech_config = speechsdk.SpeechConfig(
+            subscription=self.subscription_key, region=self.region
+        )
+        speech_config.speech_synthesis_voice_name = voice
+        speech_config.set_speech_synthesis_output_format(
+            speechsdk.SpeechSynthesisOutputFormat.Raw16Khz16BitMonoPcm
+        )
+        synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=None)
+        loop = asyncio.get_event_loop()
+
+        seq = 0
+        async for clause in text:
+            if not clause:
+                continue
+            result = await loop.run_in_executor(None, synthesizer.speak_text_async(clause).get)
+            if result.reason != speechsdk.ResultReason.SynthesizingAudioCompleted:
+                logger.warning(
+                    "azure_tts: synthesis failed for clause %r: reason=%s", clause, result.reason
+                )
+                continue
+            yield SynthesisChunk(
+                audio=AudioChunk(data=result.audio_data, sample_rate=config.sample_rate, seq=seq),
+                text=clause,
+                seq=seq,
+            )
+            seq += 1
+
+    async def aclose(self) -> None:
+        return None

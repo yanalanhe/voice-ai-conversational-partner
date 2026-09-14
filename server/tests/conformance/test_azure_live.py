@@ -7,6 +7,9 @@ marker exists exactly for this). Not run in CI; run manually with:
     AZURE_SPEECH_KEY=... AZURE_SPEECH_REGION=... \\
     AZURE_OPENAI_ENDPOINT=... AZURE_OPENAI_API_KEY=... AZURE_OPENAI_DEPLOYMENT=... \\
     pytest server/tests/conformance/test_azure_live.py -m live
+
+(AZURE_SPEECH_KEY/REGION cover both STT and TTS -- same resource, same
+credentials.)
 """
 
 from __future__ import annotations
@@ -14,8 +17,8 @@ from __future__ import annotations
 import os
 
 import pytest
-from app.providers.azure import AzureLLM, AzureSTT
-from app.providers.types import AudioChunk, LLMConfig, Message, Role, STTConfig
+from app.providers.azure import AzureLLM, AzureSTT, AzureTTS
+from app.providers.types import AudioChunk, LLMConfig, Message, Role, STTConfig, TTSConfig
 
 pytestmark = pytest.mark.live
 
@@ -58,3 +61,21 @@ async def test_azure_llm_streams_a_real_reply() -> None:
     assert "pineapple" in text.lower()
     assert deltas[-1].finish_reason is not None
     await llm.aclose()
+
+
+async def _clauses(*pieces: str):
+    for p in pieces:
+        yield p
+
+
+@pytest.mark.skipif(not _HAS_SPEECH_CREDS, reason="AZURE_SPEECH_KEY/REGION not set")
+async def test_azure_tts_synthesizes_nonempty_audio_per_clause() -> None:
+    tts = AzureTTS(
+        subscription_key=os.environ["AZURE_SPEECH_KEY"], region=os.environ["AZURE_SPEECH_REGION"]
+    )
+    clauses = _clauses("Hello there.", "How are you?")
+    chunks = [c async for c in tts.synthesize(clauses, TTSConfig())]
+    assert len(chunks) == 2
+    assert all(len(c.audio.data) > 0 for c in chunks)
+    assert [c.text for c in chunks] == ["Hello there.", "How are you?"]
+    await tts.aclose()
