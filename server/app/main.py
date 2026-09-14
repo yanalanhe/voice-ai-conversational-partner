@@ -26,7 +26,9 @@ import uuid
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
+from app.pedagogy.models import CorrectionStrategy
 from app.pedagogy.packs import load_builtin_pack
+from app.pedagogy.prompts import CORRECTION_INSTRUCTIONS
 from app.providers.azure import AzureLLM, AzureSTT, AzureTTS
 from app.providers.mock import MockLLM, MockSTT, MockTTS, scripted_tutor
 from app.providers.types import AudioChunk
@@ -130,17 +132,30 @@ def _default_orchestrator(outbox: asyncio.Queue[OrchestratorEvent]) -> SessionOr
     reason for one public-demo visitor's session to share state with another.
 
     Set DEMO_SCRIPT=generic for a plain English conversation instead -- no
-    pedagogy layer involved at all. If AZURE_SPEECH_KEY/REGION and
+    pedagogy layer involved at all (no level, no vocabulary ceiling, no
+    scenario). If AZURE_SPEECH_KEY/REGION and
     AZURE_OPENAI_ENDPOINT/API_KEY/DEPLOYMENT are all set, this uses real
     Azure AI Speech (STT and TTS) and real Azure OpenAI (LLM) -- what you
     say is actually recognized, actually answered, and the reply is actually
     spoken back, not replayed from a script. TTS reuses the same Speech
     resource/credentials as STT -- no separate configuration needed.
+
+    The one piece of pedagogy borrowed here despite the above: the RECAST
+    correction strategy's instruction text (app/pedagogy/prompts.py), so the
+    gentle-correction behavior (PD-4) is actually testable against a real
+    LLM. zh_hsk's build_pedagogy_orchestrator has this wired for real, but
+    only ever runs on mocks (see this function's docstring above), which
+    can't act on an instruction it doesn't understand.
     """
     if _DEMO_SCRIPT == "generic":
         if _USE_REAL_GENERIC_PROVIDERS:
             assert _AZURE_SPEECH_KEY and _AZURE_SPEECH_REGION  # narrows for mypy
             assert _AZURE_OPENAI_ENDPOINT and _AZURE_OPENAI_API_KEY and _AZURE_OPENAI_DEPLOYMENT
+            system_prompt = (
+                "You are a friendly conversation partner helping someone practice "
+                "a language. Keep replies short and natural.\n"
+                + CORRECTION_INSTRUCTIONS[CorrectionStrategy.RECAST]
+            )
             return SessionOrchestrator(
                 stt=AzureSTT(subscription_key=_AZURE_SPEECH_KEY, region=_AZURE_SPEECH_REGION),
                 llm=AzureLLM(
@@ -150,6 +165,7 @@ def _default_orchestrator(outbox: asyncio.Queue[OrchestratorEvent]) -> SessionOr
                 ),
                 tts=AzureTTS(subscription_key=_AZURE_SPEECH_KEY, region=_AZURE_SPEECH_REGION),
                 outbox=outbox,
+                system_prompt=system_prompt,
             )
         return SessionOrchestrator(
             stt=MockSTT(utterances=["hello", "how are you", "goodbye"], loop=True),

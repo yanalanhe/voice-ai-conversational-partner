@@ -24,7 +24,7 @@ from app.pedagogy.models import CorrectionStrategy, LanguagePack, LevelPolicy, S
 # happens to collide (it won't, in practice, but this keeps intent explicit).
 TEMPLATE_VERSION = 1
 
-_CORRECTION_INSTRUCTIONS = {
+CORRECTION_INSTRUCTIONS = {
     CorrectionStrategy.RECAST: (
         "If the learner makes a grammar or vocabulary error, do not correct it "
         "directly. Instead, naturally recast the correct form back into your "
@@ -66,7 +66,7 @@ def build_system_prompt(
         f"{level.max_sentence_words} words or fewer.",
         f"Keep your own turns short -- aim for about {level.target_agent_turn_words} "
         "words per reply. The learner should be doing most of the talking.",
-        _CORRECTION_INSTRUCTIONS[level.correction_strategy],
+        CORRECTION_INSTRUCTIONS[level.correction_strategy],
     ]
 
     if not level.l1_scaffolding_allowed:
