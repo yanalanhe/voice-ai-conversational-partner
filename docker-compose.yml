@@ -12,6 +12,15 @@ services:
       # sanity-checking pipeline mechanics without reading Mandarin.
       # Override: DEMO_SCRIPT=generic docker compose up --build
       - DEMO_SCRIPT=${DEMO_SCRIPT:-zh_hsk}
+      # Real Azure providers, used only when DEMO_SCRIPT=generic and ALL five
+      # are set (server/app/main.py); anything missing falls back to mocks.
+      # Read from your shell or from a git-ignored .env file next to this
+      # compose file -- never commit real values here.
+      - AZURE_SPEECH_KEY=${AZURE_SPEECH_KEY:-}
+      - AZURE_SPEECH_REGION=${AZURE_SPEECH_REGION:-}
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT:-}
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY:-}
+      - AZURE_OPENAI_DEPLOYMENT=${AZURE_OPENAI_DEPLOYMENT:-}
 
   web:
     build:

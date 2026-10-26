@@ -20,6 +20,18 @@
         margin-bottom: 1rem;
         cursor: pointer;
       }
+      .about {
+        background: #f5f5f5;
+        border-radius: 4px;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1.25rem;
+        font-size: 0.85rem;
+        line-height: 1.45;
+      }
+      .about h2 { font-size: 0.85rem; font-weight: 600; margin: 0 0 0.25rem; }
+      .about p { margin: 0 0 0.75rem; }
+      .about ol { margin: 0; padding-left: 1.25rem; }
+      .about .note { color: #666; margin: 0.75rem 0 0; font-size: 0.8rem; }
       .status { font-size: 0.85rem; color: #666; margin-bottom: 0.75rem; }
       .transcript {
         border: 1px solid #ccc;
@@ -42,6 +54,8 @@
         white-space: pre-wrap;
       }
       @media (prefers-color-scheme: dark) {
+        .about { background: #222; }
+        .about .note { color: #aaa; }
         .transcript { border-color: #444; }
         .stages { background: #222; }
       }
@@ -50,6 +64,27 @@
   <body>
     <h1>Parlons</h1>
     <div class="subtitle">Voice AI conversation partner -- cascaded pipeline demo</div>
+    <section class="about">
+      <h2>What it is</h2>
+      <p>
+        A voice-first conversation partner for practicing a second language. You speak, it
+        answers out loud, and it gently corrects mistakes by rephrasing them naturally instead
+        of interrupting. You can cut in while it is talking, and the page shows how fast each
+        reply came back.
+      </p>
+      <h2>How to use it</h2>
+      <ol>
+        <li>Click <strong>Connect</strong> and allow microphone access.</li>
+        <li>Speak a sentence, then pause for about a second.</li>
+        <li>Listen to the reply. Start talking to interrupt it at any time.</li>
+        <li>Check the latency panel below for the time to first audio, then click
+          <strong>Disconnect</strong> when you are done.</li>
+      </ol>
+      <p class="note">
+        Use headphones to avoid the agent hearing itself. If the server has no speech service
+        configured, replies come from a fixed script and ignore what you say.
+      </p>
+    </section>
     <button id="connect">Connect</button>
     <div id="hud"></div>
     <script type="module" src="/src/main.ts"></script>
