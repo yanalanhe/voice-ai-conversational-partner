@@ -24,7 +24,7 @@ This is the single decision that makes everything else in the repo possible with
 account:
 
 - **The entire CI pipeline runs on zero credentials and zero spend** — see
-  `.github/workflows/ci.yml`. 217 tests, the full eval harness, and the quality gates
+  `.github/workflows/ci.yml`. 241 tests, the full eval harness, and the quality gates
   (`eval/gates.py`) all execute against mocks.
 - **Latency regression testing is reproducible.** `eval/latency_replay.py` runs synthetic
   turns through the real cascaded pipeline with seeded mock latency, producing a p50/p95 that
@@ -44,7 +44,12 @@ account:
   would make tests faster and worthless") but it does mean latency-simulating test files
   (`test_latency_replay.py`, `test_gates.py`, `test_report_generator.py`) cost real wall-clock
   time and must keep `n` small in unit tests, reserving larger `n` for the actual eval run.
-- No real adapter has been built or tested against a live vendor in this build window (see the
-  PRD's Sep 10 amendment cutting realtime mode and reprioritizing the eval harness). The
-  Protocol contracts and conformance suite (ADR-002) are what make adding one later a matter
+- **Update, Sep 13:** the first real adapters now exist (`AzureSTT`, `AzureLLM`, `AzureTTS` in
+  `server/app/providers/azure.py`), and the mock-first design is what made adding them
+  additive. They are tested live in `server/tests/conformance/test_azure_live.py`, which is
+  skipped unless Azure credentials are present and so never runs in CI; the three skipped tests
+  in a credential-free run are these. CI therefore still exercises only the mocks. Real
+  adapters are wired into the English `generic` demo only; the pedagogy path still runs on
+  mocks. No Gemini or realtime adapter has been built (see the PRD's Sep 10 amendment).
+  The Protocol contracts and conformance suite (ADR-002) remain what make adding one a matter
   of writing the adapter and passing the existing suite, not inventing new test infrastructure.

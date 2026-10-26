@@ -34,8 +34,9 @@
 ┌──────────────────────────▼───────────────────────────────────────┐
 │  Provider layer (typing.Protocol, ADR-002)                        │
 │  STTProvider · LLMProvider · TTSProvider · PronunciationProvider  │
-│  Mock implementations (ADR-003) ship and are fully tested;        │
-│  no real vendor adapter (Azure, Gemini) is wired up in this build │
+│  Mock implementations (ADR-003) ship and are fully tested.        │
+│  Azure STT/LLM/TTS adapters (providers/azure.py) back the English │
+│  `generic` demo only; no Gemini adapter exists.                   │
 └────────────────────────────────────────────────────────────────────┘
 
         ┌───────────────────────────────────────────────┐
@@ -82,7 +83,10 @@ utterance; the interrupted turn is never partially recorded into conversation hi
 | Pedagogy layer, both language packs | Fully implemented, tested |
 | Eval harness (golden set, deterministic checks, judge, gates) | Fully implemented, tested |
 | Browser client (capture, VAD, playback, HUD) | Fully implemented |
-| Real vendor adapters (Azure, Gemini) | **Not built** — see ADR-003 |
+| Azure STT / LLM / TTS adapters (`providers/azure.py`) | Implemented and deployed, but wired only into the English `generic` demo (`DEMO_SCRIPT=generic` with credentials). The `zh_hsk` pack path still runs on mocks; `AzureTTS` ignores `speaking_rate` (needs SSML) |
+| Gemini and other vendor adapters | **Not built** — see ADR-003 |
+| Language packs served by the running server | `zh_hsk` only, and on mocks. `fr_sle` is complete and tested but nothing in `main.py` loads it |
+| Live Mandarin / French conversation | **Not built** — needs the Azure adapters wired into the pack path (`session/factory.py`) |
 | Realtime pipeline mode | **Interface only, no adapter** — see ADR-004 |
 | Pronunciation assessment wired to a real provider | **Not built** — see ADR-006 |
 | RAG / curriculum retrieval | **Cut** — see PRD Sec 8.0 amendment |

@@ -1,8 +1,20 @@
 # Parlons
 
-A voice-first AI conversation partner for second-language speaking practice. Demonstrated on
-English→Mandarin (HSK 1–4); a second pack (English→French, Government of Canada SLE A/B/C)
-ships alongside it to prove the language pair is configuration, not code.
+A voice-first AI conversation partner for second-language speaking practice. The language pair is
+configuration, not code: two language packs ship, English→Mandarin (HSK 1–4) and English→French
+(Government of Canada SLE A/B/C).
+
+**What you can actually run today:**
+
+| Mode | Language | Providers |
+|---|---|---|
+| Default demo (`zh_hsk` pack) | Mandarin, HSK1 `ordering_lunch` scenario | Scripted mocks. What you say is ignored; the recognized lines and replies are fixed. The prompt build and vocabulary-ceiling check on each reply are real. |
+| `DEMO_SCRIPT=generic` with Azure credentials | English only | Real Azure AI Speech (STT and TTS) and Azure OpenAI. A live conversation, no pedagogy layer. This is what the deployed demo runs. |
+| `DEMO_SCRIPT=generic` without credentials | English | Scripted mocks. |
+| `fr_sle` pack | French | Not served. The pack is complete and tested (and used by the eval harness), but nothing in the server loads it yet. |
+
+A live Mandarin or French conversation needs the Azure adapters wired into the pack path; that is
+not done yet.
 
 **This README states plainly what is real and what is a documented design, throughout.** See
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md#what-is-real-vs-what-is-a-documented-design) for
@@ -32,9 +44,11 @@ DEMO_SCRIPT=generic docker compose up --build
 ```
 
 Both packs that ship (`zh_hsk`, `fr_sle`) always have English as the *source* language, never
-the target — there is no "practice English" mode, since the project's whole point is an
+the target — there is no "practice English" pack, since the project's whole point is an
 English speaker practicing a foreign language. `generic` is the closest thing to one, and it
-is deliberately not pedagogy at all, just a fixed script.
+is deliberately not pedagogy: no level, vocabulary ceiling or scenario. With Azure credentials
+it is a real conversation (its recognition and voice are fixed to `en-US`); without them it is
+a fixed script. Local `docker compose` passes no credentials, so it always runs on mocks.
 
 ## What this demonstrates
 
@@ -80,14 +94,18 @@ Regenerate it: `python -m eval.report`.
 
 ## Honesty notes — the things worth reading before the rest
 
-- **No real vendor adapter (Azure, Gemini) is wired up.** Every provider in this build is a
-  deterministic mock (ADR-003). The Protocol contracts and conformance suite exist
-  specifically so adding one is additive, not a rewrite.
-- **The primary demo language is Mandarin because the author is fluent in it** — human
+- **Real vendor adapters exist for Azure only, and only the English `generic` demo uses
+  them.** `AzureSTT`, `AzureLLM` and `AzureTTS` (`server/app/providers/azure.py`) satisfy the
+  Protocol contracts and run the deployed demo. The Mandarin pack path still runs on
+  deterministic mocks (ADR-003), so its pedagogy guarantees have been verified against scripted
+  output, not a real model. No Gemini adapter exists. `AzureTTS` does not yet honor the
+  per-level `speaking_rate`.
+- **The primary pack is Mandarin because the author is fluent in it** — human
   judge-validation requires being able to read what the model produced, and a project that
   fabricated validation for a language nobody on the project can check would be worse than
-  one that scoped the claim honestly. The French pack proves the same architecture works for
-  a language pair added without touching pipeline code.
+  one that scoped the claim honestly. The French pack shows the same architecture accepts a
+  second language pair without touching pipeline code; it is loaded by tests and the eval
+  harness, but not selectable in the running server.
 - **The `zh_hsk` and `fr_sle` vocabulary wordlists are curated demonstration subsets**, not
   the verbatim official HSK list (licensed content) or a real SLE standard (SLE has no
   published wordlist at all). See each pack's own README under
@@ -143,9 +161,8 @@ browser console.
 support the persistent WebSocket connection the backend needs. This was a real constraint
 discovered while planning deployment, documented in
 [`docs/COMPLIANCE.md`](docs/COMPLIANCE.md). See [`infra/README.md`](infra/README.md) for
-step-by-step deployment instructions — **not validated against a live Azure subscription**,
-since neither the Azure CLI nor the Bicep CLI was available while this was authored; run
-`az bicep build` yourself first.
+step-by-step deployment instructions. The template has been used for real deployments; run
+`az bicep build --file infra/main.bicep` first to catch errors before spending a deployment.
 
 Before sharing a public URL, set `DEMO_ACCESS_CODE` (see
 `server/app/security/demo_guard.py`) — a public voice endpoint spends real API credits for

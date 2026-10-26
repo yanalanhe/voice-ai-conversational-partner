@@ -23,15 +23,15 @@ audio sample played. Measured client-side in the browser HUD; server-side spans
 
 The numbers above are the *modelled* per-stage targets used to configure the mock providers'
 `LatencyProfile`s in `eval/latency_replay.py` (`TTFT_PROFILE`, `TTS_TTFB_PROFILE`, etc.) — they
-are not yet a measurement against a real deployed system, because no real vendor adapter is
-wired up (see ADR-003, ADR-004). `eval/reports/example.md` contains one real, reproducible run
-of `eval/latency_replay.py`, which reports the seeded mock-based p50/p95 the CI quality gate
-(`eval/gates.py`) actually checks against.
+are not a measurement of the real system. `eval/reports/example.md` contains one real,
+reproducible run of `eval/latency_replay.py`, which reports the seeded mock-based p50/p95 the
+CI quality gate (`eval/gates.py`) actually checks against.
 
-**Getting a real, deployed p95** is the natural next measurement once a real STT/LLM/TTS
-adapter exists: swap the mock providers for real ones in `_default_orchestrator`
-(`server/app/main.py`), run the same conversation set, and report the number this file would
-otherwise be estimating.
+Real Azure adapters now exist (`server/app/providers/azure.py`) and run the deployed English
+`generic` demo, so a real number is obtainable but **has not yet been recorded**. The browser
+HUD shows live TTFA and a stage breakdown for that deployment. The remaining step is to run a
+fixed conversation set against it, record p50/p95, and replace the modelled figures above.
+Mandarin (`zh_hsk`) latency stays modelled until the pack path is wired to real providers.
 
 ## Optimizations implemented
 
@@ -45,11 +45,16 @@ otherwise be estimating.
 
 ## Optimizations *not* implemented in this build
 
-- Persistent pre-warmed provider connections (no real provider connections exist yet).
+- Persistent pre-warmed provider connections (the Azure adapters in `providers/azure.py` do
+  not pool or pre-warm connections).
 - Speculative generation on high-confidence interim transcripts.
 - Scenario-opener audio caching.
-- Adaptive endpointing by proficiency level (the VAD hangover is a fixed 500 ms today,
-  configurable but not wired to `LevelPolicy`).
+- Adaptive endpointing by proficiency level. The VAD hangover is a fixed 900 ms
+  (`web/src/audio/vad.ts`), configurable but not wired to `LevelPolicy`. It was raised from
+  the PRD's 500 ms default because real spontaneous speech has mid-sentence pauses longer than
+  that, which fragmented turns; the cost is up to 400 ms more endpointing latency. A hard cap of
+  8 s per utterance (`maxSpeechMs`) stops background noise from extending a recording forever.
+- Honoring `speaking_rate` in `AzureTTS` (needs SSML), so per-level speech rate is not applied.
 
 These are documented as the next latency work, not silently dropped.
 
@@ -57,7 +62,9 @@ These are documented as the next latency work, not silently dropped.
 
 Learner speech is accented, disfluent, and — for `zh_hsk` specifically — a wrong tone
 produces a *different word*, not a mispronounced one (see ADR-006 for why pronunciation
-assessment therefore has to run on raw audio, not the STT transcript). No real STT adapter has
-been benchmarked against accented or L2 speech in this build; `Transcript.is_confident`
+assessment therefore has to run on raw audio, not the STT transcript). `AzureSTT` is wired up
+for the English `generic` demo, but it has not been benchmarked against accented or L2 speech,
+and the Mandarin pack path does not use it yet. `Transcript.is_confident`
 (`app/providers/types.py`) is the hook a real STT integration would use to trigger a
-clarification request rather than acting on a low-confidence hypothesis.
+clarification request rather than acting on a low-confidence hypothesis; when Azure returns no
+match the orchestrator emits a `NoSpeechEvent`, which the UI shows as "didn't catch that".

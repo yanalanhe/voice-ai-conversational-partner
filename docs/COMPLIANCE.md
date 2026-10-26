@@ -24,9 +24,17 @@ a demo of the vendor's product, not of the system this repo is meant to demonstr
 
 ## Region pinning
 
-The Azure infra-as-code (`infra/main.bicep`) pins every resource to `canadacentral`. This is
-declared in the template, not merely intended — a deployment targeting a different region
-would require an explicit parameter change, not silently drift.
+The Azure infra-as-code (`infra/main.bicep`) pins the Container App and its supporting
+resources to `canadacentral`. This is declared in the template, not merely intended — a
+deployment targeting a different region would require an explicit parameter change, not
+silently drift.
+
+**One exception, found during deployment:** Azure OpenAI is not offered in `canadacentral`, so
+the `parlons-openai` resource lives in `canadaeast`. Azure Speech stays in `canadacentral`.
+Both regions are in Canada, so learner text sent to the LLM stays within the country, but the
+deployment is not strictly single-region. The OpenAI resource was created with the Azure CLI
+rather than declared in `main.bicep`; the template only receives its endpoint, key and
+deployment name as parameters.
 
 ## PII and audio handling
 
