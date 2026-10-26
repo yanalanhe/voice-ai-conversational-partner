@@ -18,7 +18,16 @@ Two things make this non-trivial:
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
+
+# A sentence terminator jammed against the next capitalised word ("weekends.It's").
+# Models sometimes emit this, especially when earlier assistant turns in the
+# history lost their inter-sentence spaces. Left alone, the boundary check
+# below treats it as "3.14" and never splits, and TTS reads "to.Do" as a
+# web address ("to dot Do"). The lookbehind demands a lowercase letter, digit
+# or closing quote so "U.S.A" and "3.14" are untouched.
+_GLUED_SENTENCE = re.compile(r"(?<=[a-z0-9)\"'’”])([.!?])(?=[A-Z])")
 
 # Sentence-final punctuation only. Commas are deliberately excluded: they read
 # as clause boundaries linguistically, but splitting TTS on every comma is
@@ -54,7 +63,9 @@ class ClauseChunker:
         Returns a list because one delta can complete more than one clause
         (models often emit several tokens' worth at once).
         """
-        self._buffer += delta
+        # Re-run over the whole buffer, not just the delta: the "." and the
+        # capital letter can arrive in different deltas.
+        self._buffer = _GLUED_SENTENCE.sub(r"\1 ", self._buffer + delta)
         out: list[str] = []
         while (clause := self._take_clause()) is not None:
             out.append(clause)

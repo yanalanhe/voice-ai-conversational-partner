@@ -76,3 +76,29 @@ def test_does_not_split_after_title_abbreviation() -> None:
     c = ClauseChunker(min_chars=1)
     clauses = feed_all(c, ["Dr. Chen will see you now."])
     assert clauses == ["Dr. Chen will see you now."]
+
+
+def test_splits_sentences_glued_together_without_a_space() -> None:
+    c = ClauseChunker(min_chars=1)
+    clauses = feed_all(
+        c,
+        ["That’s awesome!Going to trails sounds perfect.It’s nice to relax.Do you go alone?"],
+    )
+    assert clauses == [
+        "That’s awesome!",
+        "Going to trails sounds perfect.",
+        "It’s nice to relax.",
+        "Do you go alone?",
+    ]
+
+
+def test_glued_sentence_split_across_deltas() -> None:
+    c = ClauseChunker(min_chars=1)
+    clauses = feed_all(c, ["Nice to relax.", "Do you go alone?"])
+    assert clauses == ["Nice to relax.", "Do you go alone?"]
+
+
+def test_glue_fix_leaves_acronyms_and_decimals_alone() -> None:
+    c = ClauseChunker(min_chars=1)
+    clauses = feed_all(c, ["The U.S.A team scored 3.14 points."])
+    assert clauses == ["The U.S.A team scored 3.14 points."]

@@ -186,3 +186,19 @@ class TestClose:
         await orch.on_speech_end()
         await asyncio.sleep(0.02)
         await orch.close()  # should not raise
+
+
+def test_join_clauses_puts_a_space_between_latin_sentences() -> None:
+    from app.session.orchestrator import join_clauses
+
+    assert join_clauses(["That’s awesome!", "Do you go alone?"]) == (
+        "That’s awesome! Do you go alone?"
+    )
+
+
+def test_join_clauses_adds_no_space_between_cjk_clauses() -> None:
+    from app.session.orchestrator import join_clauses
+
+    assert join_clauses(["你好！", "你想吃什么？"]) == (
+        "你好！你想吃什么？"
+    )

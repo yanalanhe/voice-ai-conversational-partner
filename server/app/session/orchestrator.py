@@ -50,6 +50,23 @@ from app.telemetry.spans import Mark, TurnTimeline
 # first syllables of the interruption are not lost while the client's
 # speech_start control message is in flight.
 _BARGE_IN_BUFFER_FRAMES = 100  # ~2s at 20ms frames
+_CJK_START = 0x2E80  # first code point of the CJK blocks; no word spaces from here
+
+
+def join_clauses(clauses: list[str]) -> str:
+    """Rebuild reply text from the stripped clauses the chunker released.
+
+    The chunker strips each clause, so a bare "".join() glues sentences
+    together ("awesome!Going"). That text goes back into the history the model
+    reads next turn, and the model then imitates it. Latin text gets a space
+    at each seam; CJK does not, since Mandarin and Japanese have no word spaces.
+    """
+    out = ""
+    for clause in clauses:
+        if out and ord(out[-1]) < _CJK_START and clause and ord(clause[0]) < _CJK_START:
+            out += " "
+        out += clause
+    return out
 
 
 async def _drain_queue(queue: asyncio.Queue[AudioChunk | None]) -> AsyncIterator[AudioChunk]:
@@ -213,7 +230,7 @@ class SessionOrchestrator:
             reply_parts.append(chunk.text)
             await self.outbox.put(AssistantAudioEvent(chunk=chunk))
 
-        agent_text = "".join(reply_parts)
+        agent_text = join_clauses(reply_parts)
         self._messages.append(Message(role=Role.ASSISTANT, content=agent_text))
         await self.outbox.put(TurnCompleteEvent(summary=timeline.summary()))
         self._turn_task = None
